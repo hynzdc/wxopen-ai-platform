@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源列表管理</title>
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">-->
+    <link href="https://cdn.bootcss.com/font-awesome/6.0.0/css/all.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-color: #c9d1d9;
+            --border-color: #30363d;
+            --primary-color: #238636;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+        }
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        /* 单个星星样式 */
+        .star {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation:
+                    twinkle 1.5s infinite ease-in-out,
+                    drift 30s infinite linear; /* 新增移动动画 */
+        }
+        /* 新增移动动画关键帧 */
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0);
+            }
+            50% {
+                transform: translate(50px, 25px); /* 移动幅度 */
+            }
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        /* 星星闪烁动画 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        /* Navbar styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .btn {
+            padding: 6px 12px;
+            background-color: #2ea44f;
+            color: white;
+            border: 1px solid rgba(27,31,35,.15);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .nav-items {
+            display: flex;
+            gap: 32px;
+            flex-grow: 1;
+        }
+        .nav-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+            margin-left: 2%;
+        }
+        .nav-link:hover {
+            color: #58a6ff;
+            text-decoration: underline;
+        }
+        .user-profile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            transition: transform 0.2s;
+        }
+
+        .logout-button {
+            position: absolute;
+            top: 100%; /* Position it below the avatar */
+            margin-top: 18%;
+            right: 0; /* Align it to the right of the avatar */
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: var(--text-color);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            white-space: nowrap;
+            transform: translateY(10px);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .user-profile:hover .logout-button {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0); /* Move it into view */
+        }
+
+        .logout-button:hover {
+            background: #f6f8fa;
+            color: #cb2431;
+        }
+        /* Main content styles */
+        .container {
+            max-width: 1200px;
+            margin: 80px auto 40px; /* Space for navbar */
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 6px 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: 1px solid rgba(27,31,35,.15);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #2ea043;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            text-align: left;
+            color: var(--text-color);
+        }
+        th {
+            background-color: var(--bg-color);
+            font-weight: 600;
+        }
+        /* Action button styles */
+        .action-btn {
+            color: #58a6ff;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+        /* Modal styles */
+        #addModal {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            z-index: 1001;
+        }
+        #addModal input, #addModal textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            background-color: var(--bg-color);
+            color: var(--input-text-color);
+        }
+        #addModal button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #addModal button:hover {
+            background-color: #2ea043;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<!-- 新增导航栏 -->
+<nav class="navbar">
+    <div class="nav-items">
+        <a th:href="@{/}" class="nav-link">资源配置</a>
+        <a th:href="@{/view/toSettingReply}" class="nav-link">回复管理</a>
+        <a th:href="@{/view/showResourceList}" class="nav-link">资源管理</a>
+        <a th:href="@{/view/chatDeepSeek}" class="nav-link">满血DeepSeek</a>
+    </div>
+    <div class="user-profile">
+        <!-- 修改头像为实际图片 -->
+        <img src="https://hynzdc.oss-cn-beijing.aliyuncs.com/image/image-20250216143639313.png"
+             class="user-avatar"
+             alt="用户头像">
+        <button class="logout-button" onclick="document.getElementById('logoutForm').submit()">登出系统</button>
+        <span th:text="${username}" style="font-size:14px;color:#ffffff;"></span>
+        <form id="logoutForm" th:action="@{/view/logout}" method="get" style="display: none;">
+        </form>
+    </div>
+</nav>
+<div class="stars" id="stars"></div>
+<div class="container">
+    <div class="header">
+        <h2 style="color: var(--text-color);">资源列表管理</h2>
+        <a class="btn" th:href="@{/view/target/operateResource}">添加资源</a>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>资源名称</th>
+            <th>资源内容</th>
+            <th>自动回复口令</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 示例数据 -->
+        <tr th:each="resource : ${resources}">
+            <td th:text="${resource.resourceName}">示例资源</td>
+            <td th:text="${resource.resourceUrl}">资源详情描述</td>
+            <td th:text="${resource.exchangeCode}">#示例指令</td>
+            <td>
+                <a th:href="@{/view/updateResource/{id}(id=${resource.id})}" class="action-btn">编辑</a>
+                <a th:href="@{/view/deleteResource/{id}(id=${resource.id})}" class="action-btn" style="color: #cb2431">删除</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<!-- Add resource modal -->
+<div id="addModal">
+    <h3 style="color: var(--text-color);">添加新资源</h3>
+    <form>
+        <div>
+            <label style="color: var(--text-color);">资源名称：</label>
+            <input type="text" placeholder="资源名称..." required>
+        </div>
+        <div>
+            <label style="color: var(--text-color);">资源内容：</label>
+            <textarea placeholder="资源内容..." required></textarea>
+        </div>
+        <div>
+            <label style="color: var(--text-color);">自动回复口令：</label>
+            <input type="text" placeholder="自动回复口令..." required>
+        </div>
+        <div style="text-align: right;">
+            <button type="submit" class="btn" style="margin-left: 10px;">保存</button>
+        </div>
+    </form>
+</div>
+<script>
+    // 创建星空背景
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const starCount = 500;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3;
+
+            // 设置随机动画参数
+            star.style.animation =
+                `twinkle 1.5s infinite ease-in-out,
+                 drift ${30 + Math.random() * 30}s infinite linear`; // 随机持续时间
+            star.style.animationDelay = `-${Math.random() * 30}s`; // 随机起始点
+
+            // 其他原有样式
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // 初始化星空
+    createStars();
+</script>
+</body>
+</html>

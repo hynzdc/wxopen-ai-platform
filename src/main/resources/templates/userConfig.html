@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>开发者配置</title>
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">-->
+    <link href="https://cdn.bootcss.com/font-awesome/6.0.0/css/all.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-color: #c9d1d9;
+            --border-color: #30363d;
+            --primary-color: #238636;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        /* 单个星星样式 */
+        .star {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation:
+                    twinkle 1.5s infinite ease-in-out,
+                    drift 30s infinite linear; /* 新增移动动画 */
+        }
+        /* 新增移动动画关键帧 */
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0);
+            }
+            50% {
+                transform: translate(50px, 25px); /* 移动幅度 */
+            }
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        /* 星星闪烁动画 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            width: 400px;
+            margin-top: 5%;
+        }
+        h1 {
+            font-size: 26px;
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            position: relative;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+        h1::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #58a6ff;
+            margin: 10px auto 0;
+            border-radius: 2px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        h1:hover {
+            color: #58a6ff;
+            border-color: #58a6ff;
+        }
+        h1:hover::after {
+            width: 90px;
+            background-color: #2ea043;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            height: 34px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin-bottom: 2px;
+            transition: all 0.2s;
+        }
+        input:focus {
+            border-color: #58a6ff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(17, 88, 199, 0.3);
+        }
+        button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2ea043;
+        }
+        .sensitive-field {
+            position: relative;
+        }
+        .sensitive-field::after {
+            content: "敏感信息请妥善保管";
+            color: #8b949e;
+            font-size: 12px;
+            position: absolute;
+            right: 0;
+            bottom: -18px;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .nav-items {
+            display: flex;
+            gap: 32px;
+            flex-grow: 1;
+        }
+        .nav-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+            margin-left: 2%;
+        }
+        .nav-link:hover {
+            color: #58a6ff;
+            text-decoration: underline;
+        }
+        .user-profile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            transition: transform 0.2s;
+        }
+        .logout-button {
+            position: absolute;
+            top: 100%;
+            margin-top: 18%;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: var(--text-color);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            white-space: nowrap;
+            transform: translateY(10px);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .user-profile:hover .logout-button {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .logout-button:hover {
+            background: #f6f8fa;
+            color: #cb2431;
+        }
+        /* 专业商务风 */
+        .pro-link {
+            font-size: 16px;
+            font-family: 'Segoe UI', sans-serif;
+            color: #2563eb;
+            text-decoration: none;
+            padding: 12px 30px;
+            border: 1px solid #2563eb;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: color 0.3s;
+            display: inline-block;
+        }
+        .pro-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: #2563eb;
+            transition: left 0.3s;
+            z-index: 1;
+        }
+        .pro-link:hover::before {
+            left: 0;
+        }
+        .pro-link:hover {
+            color: white !important;
+        }
+        .pro-link span {
+            position: relative;
+            z-index: 2;
+        }
+        a {
+            margin-left: 17%;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-items">
+        <a th:href="@{/}" class="nav-link">资源配置</a>
+        <a th:href="@{/view/toSettingReply}" class="nav-link">回复管理</a>
+        <a th:href="@{/view/showResourceList}" class="nav-link">资源管理</a>
+        <a th:href="@{/view/chatDeepSeek}" class="nav-link">满血DeepSeek</a>
+    </div>
+    <div class="user-profile">
+        <img src="https://hynzdc.oss-cn-beijing.aliyuncs.com/image/image-20250216143639313.png"
+             class="user-avatar"
+             alt="用户头像">
+        <button class="logout-button" onclick="document.getElementById('logoutForm').submit()">登出系统</button>
+        <span th:text="${username}" style="font-size:14px;color:#ffffff;"></span>
+        <form id="logoutForm" th:action="@{/view/logout}" method="get" style="display: none;">
+        </form>
+    </div>
+</nav>
+<div class="stars" id="stars"></div>
+<div class="container">
+    <h1 th:text="${username} + '，欢迎您体验'"></h1>
+    <a th:href="@{/view/target/readme}" target="_blank" class="pro-link">
+        <span>公众号AI大模型助手使用手册 →</span>
+    </a>
+    <form th:action="@{/view/saveOrUpdateWxUserConfig}" method="post">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username" disabled required th:value="${username}">
+        </div>
+        <div class="form-group">
+            <label for="email">邮箱</label>
+            <input type="email" id="email" name="email" th:value="${email}" disabled required>
+        </div>
+        <div class="form-group">
+            <label for="officialAccount">公众号名称</label>
+            <input type="text" id="officialAccount" name="officialAccount" th:value="${config?.wxOpenName} ?: ''" required>
+        </div>
+        <div class="form-group">
+            <label for="appId">开发者ID(AppID)</label>
+            <input type="text" id="appId" name="appId" th:value="${config?.appId} ?: ''" required>
+        </div>
+        <div class="form-group sensitive-field">
+            <label for="appSecret">开发者密码(AppSecret)</label>
+            <input type="password" id="appSecret" name="appSecret" th:value="${config?.appSecret} ?: ''" required>
+        </div>
+        <div class="form-group sensitive-field">
+            <label for="token">令牌(Token)</label>
+            <input type="password" id="token" name="token" th:value="${config?.token} ?: ''" required>
+        </div>
+        <div class="form-group sensitive-field">
+            <label for="encodingAESKey">消息加解密密钥</label>
+            <input type="password" id="encodingAESKey" name="encodingAESKey" th:value="${config?.encodingKey} ?: ''" required>
+        </div>
+        <button type="submit">保存配置</button>
+    </form>
+</div>
+<script>
+    // 创建星空背景
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const starCount = 500;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3;
+
+            // 设置随机动画参数
+            star.style.animation =
+                `twinkle 1.5s infinite ease-in-out,
+                 drift ${30 + Math.random() * 30}s infinite linear`; // 随机持续时间
+            star.style.animationDelay = `-${Math.random() * 30}s`; // 随机起始点
+
+            // 其他原有样式
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // 初始化星空
+    createStars();
+</script>
+</body>
+</html>

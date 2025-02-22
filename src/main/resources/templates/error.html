@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>哎呀，出错了！</title>
+    <!-- 使用先前页面的风格 -->
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-color: #c9d1d9;
+            --border-color: #30363d;
+            --error-color: #ea4a5a;
+            --primary-color: #238636;
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-color);
+        }
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        /* 单个星星样式 */
+        .star {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation:
+                    twinkle 1.5s infinite ease-in-out,
+                    drift 30s infinite linear; /* 新增移动动画 */
+        }
+        /* 新增移动动画关键帧 */
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0);
+            }
+            50% {
+                transform: translate(50px, 25px); /* 移动幅度 */
+            }
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        /* 星星闪烁动画 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .error-container {
+            text-align: center;
+            padding: 30px;
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        .error-icon {
+            font-size: 48px;
+            color: var(--error-color);
+            margin-bottom: 1rem;
+        }
+        .error-msg {
+            font-size: 18px;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(234, 74, 90, 0.1);
+            border-radius: 4px;
+            word-break: break-word;
+        }
+        .back-button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white !important;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .back-button:hover {
+            background-color: #035fc7;
+        }
+    </style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h1 th:text="${error} ?: '页面开小差了'"></h1>
+    <div id="error-text" class="error-msg" th:text="${error} ?: '未知错误'"></div>
+    <div style="color: #6a737d; margin: 1rem 0;">
+        页面将在 <span id="countdown">5</span> 秒后自动跳转
+    </div>
+    <a href="javascript:document.getElementById('error-text').textContent === '登录过期，请重新登录'?  window.location.href = '/' : history.back()" class="back-button">立即返回</a>
+</div>
+<script>
+    const errorCode = document.getElementById('error-text').textContent;
+    let seconds = 5;
+    const countdownElement = document.getElementById('countdown');
+    const timer = setInterval(() => {
+        seconds--;
+        countdownElement.textContent = seconds;
+        if (seconds <= 0) {
+            clearInterval(timer);
+            if (errorCode === '登录过期，请重新登录'){
+                window.location.href = '/';
+            }else {
+                history.back();
+            }
+        }
+    }, 1000);
+    // 创建星空背景
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const starCount = 500;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3;
+
+            // 设置随机动画参数
+            star.style.animation =
+                `twinkle 1.5s infinite ease-in-out,
+                 drift ${30 + Math.random() * 30}s infinite linear`; // 随机持续时间
+            star.style.animationDelay = `-${Math.random() * 30}s`; // 随机起始点
+
+            // 其他原有样式
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // 初始化星空
+    createStars();
+</script>
+</body>
+</html>

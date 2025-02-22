@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!-- saved from url=(0039)http://localhost/view/target/emailVerfy -->
+<html data-redeviation-bs-uid="jllu0s33ss"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <title>验证码已发送</title>
+  <style>
+    /* 沿用注册页样式保持统一 */
+    body {
+      background-color: #f6f8fa;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    .success-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 6px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      width: 400px;
+      text-align: center;
+    }
+
+    .check-icon {
+      font-size: 48px;
+      color: #2ea44f;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #24292e;
+      font-weight: 500;
+      margin: 15px 0;
+    }
+
+    .code-display {
+      background: #f6f8fa;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 6px;
+      font-size: 24px;
+      letter-spacing: 3px;
+      color: #0366d6;
+      border: 1px solid #e1e4e8;
+    }
+
+    .email-info {
+      color: #0366d6;
+      font-weight: 600;
+      word-break: break-all;
+      margin: 15px 0;
+    }
+
+    .tips {
+      color: #6a737d;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-top: 25px;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 25px;
+      color: #0366d6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <style class="redeviation-bs-style" data-name="content">/*! (c) Philipp Koenig under MS-RSL */
+  body>div#redeviation-bs-indicator>div{opacity:0;pointer-events:none}body>#redeviation-bs-overlay.redeviation-bs-visible,body>#redeviation-bs-sidebar.redeviation-bs-visible{opacity:1;pointer-events:auto}body.redeviation-bs-noscroll{overflow:hidden !important}body>div#redeviation-bs-indicator>div{position:absolute;transform:translate3d(-24px, 0, 0);top:0;left:0;width:24px !important;height:100%;background:rgba(0,0,0,0.5);border-radius:0 10px 10px 0;transition:opacity .3s,transform .3s;z-index:2}body>div#redeviation-bs-indicator>div>span{-webkit-mask:no-repeat center/24px;-webkit-mask-image:url(chrome-extension://jdbnofccmhefkmjbkkdkfiicjkgofkdh/img/icon-bookmark.svg);background-color:#ffffff;position:absolute;display:block;top:0;left:0;width:100%;height:100%}body>div#redeviation-bs-indicator[data-pos=right]{left:auto;right:0}body>div#redeviation-bs-indicator[data-pos=right]>div{transform:translate3d(24px, 0, 0);left:auto;right:0;border-radius:10px 0 0 10px}body>div#redeviation-bs-indicator.redeviation-bs-fullHeight>div{border-radius:0}body>div#redeviation-bs-indicator.redeviation-bs-hover>div{transform:translate3d(0, 0, 0);opacity:1}body>div#redeviation-bs-indicator[data-pos=left].redeviation-bs-has-lsb{height:100% !important;top:0 !important}body>div#redeviation-bs-indicator[data-pos=left].redeviation-bs-has-lsb>div{background:rgba(0,0,0,0)}body>div#redeviation-bs-indicator[data-pos=left].redeviation-bs-has-lsb>div>span{-webkit-mask-position-y:20px}body>#redeviation-bs-sidebar{width:350px;max-width:none;height:0;z-index:2147483646;background-color:rgba(0,0,0,0.6) !important;color-scheme:auto !important;speak:none;border:none;display:block !important;transform:translate3d(-350px, 0, 0);transition:width 0s .3s,height 0s .3s,opacity .3s,transform .3s}body>#redeviation-bs-sidebar[data-pos=right]{left:auto;right:0;transform:translate3d(350px, 0, 0)}body>#redeviation-bs-sidebar.redeviation-bs-visible{width:calc(100% + 350px);height:100%;transform:translate3d(0, 0, 0);transition:opacity .3s,transform .3s}body>#redeviation-bs-sidebar.sidepanel{width:100% !important}body>#redeviation-bs-sidebar.redeviation-bs-hideMask{background:none !important}body>#redeviation-bs-sidebar.redeviation-bs-hideMask:not(.redeviation-bs-hover){width:calc(350px + 50px)}body>#redeviation-bs-overlay{width:100%;max-width:none;height:100%;z-index:2147483647;border:none;speak:none;background:rgba(0,0,0,0.5) !important;color-scheme:auto !important;transition:opacity .3s}</style></head>
+<body>
+<div class="success-container">
+  <div class="check-icon">✓</div>
+  <h2>验证码已发送</h2>
+
+  <!-- 邮箱显示区域 -->
+  <div class="email-info" th:text="${email}">user@example.com</div>
+
+  <!-- 验证码显示区域 -->
+  <div class="code-display" th:text="${code}" >123456</div>
+
+  <div class="tips">
+    <p>请查看您的邮箱并输入验证码完成验证</p>
+    <p>（验证码15分钟内有效）</p>
+    <p style="margin-top:10px;font-size:12px;color:#959da5;">
+      未收到邮件？请检查垃圾邮件文件夹
+    </p>
+  </div>
+
+  <a href="https://www.wxopen-ai.cn/" class="back-link">返回登录页面 →</a>
+</div>
+
+<bookmark-sidebar-iuusblwo6mb id="redeviation-bs-sidebar" class="notranslate" aria-hidden="true" data-theme="default" data-pos="left"><template shadowrootmode="closed"><iframe style="margin:0;padding: 0;border: none;width: 100%;height: 100%;"></iframe></template></bookmark-sidebar-iuusblwo6mb><div id="redeviation-bs-indicator" data-theme="default" class="redeviation-bs-fullHeight redeviation-bs-visible" data-pos="left" style="height: 100%; top: 0%;"><div><span></span></div></div></body></html>

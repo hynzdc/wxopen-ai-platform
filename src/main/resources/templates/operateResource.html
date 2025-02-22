@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>开发者配置</title>
+<!--  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">-->
+  <link href="https://cdn.bootcss.com/font-awesome/6.0.0/css/all.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0d1117;
+      --card-bg: #161b22;
+      --text-color: #c9d1d9;
+      --input-text-color: #ffffff; /* Brighter text color for input */
+      --border-color: #30363d;
+      --primary-color: #238636;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    .stars {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+    /* 单个星星样式 */
+    .star {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      animation:
+              twinkle 1.5s infinite ease-in-out,
+              drift 30s infinite linear; /* 新增移动动画 */
+    }
+    /* 新增移动动画关键帧 */
+    @keyframes drift {
+      0% {
+        transform: translate(0, 0);
+      }
+      50% {
+        transform: translate(50px, 25px); /* 移动幅度 */
+      }
+      100% {
+        transform: translate(0, 0);
+      }
+    }
+
+    /* 星星闪烁动画 */
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    .container {
+      background-color: var(--card-bg);
+      padding: 30px;
+      border-radius: 6px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+    h1 {
+      font-size: 24px;
+      color: var(--text-color);
+      text-align: center;
+      margin-bottom: 25px;
+      font-weight: 300;
+      letter-spacing: -0.5px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-color);
+      font-size: 14px;
+    }
+    input {
+      width: 100%;
+      height: 34px;
+      padding: 5px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 14px;
+      background-color: var(--bg-color);
+      color: var(--input-text-color);
+      margin-bottom: 2px;
+    }
+    input:focus {
+      border-color: #58a6ff;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(17, 88, 199, 0.3);
+    }
+    button {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    button:hover {
+      background-color: #2ea043;
+    }
+    /* New navbar styles */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--card-bg);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      padding: 0 24px; /* Increased left and right padding */
+      z-index: 1000;
+    }
+    .nav-items {
+      display: flex;
+      gap: 32px;
+      flex-grow: 1;
+    }
+    .nav-link {
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+      margin-left: 2%;
+    }
+    .nav-link:hover {
+      color: #58a6ff;
+      text-decoration: underline;
+    }
+    /* User profile styles */
+    .user-profile {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      transition: transform 0.2s;
+    }
+    .logout-button {
+      margin-top: 18%;
+      position: absolute;
+      top: 50%;
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+      white-space: nowrap;
+      transform: translateY(10px);
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-color);
+    }
+    .logout-button:hover {
+      background: #f6f8fa;
+      color: #cb2431;
+    }
+    .user-profile:hover .logout-button {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(12px);
+    }
+  </style>
+</head>
+<body>
+<!-- Navbar -->
+<!-- 新增导航栏 -->
+<nav class="navbar">
+  <div class="nav-items">
+    <a th:href="@{/}" class="nav-link">资源配置</a>
+    <a th:href="@{/view/toSettingReply}" class="nav-link">回复管理</a>
+    <a th:href="@{/view/showResourceList}" class="nav-link">资源管理</a>
+    <a th:href="@{/view/chatDeepSeek}" class="nav-link">满血DeepSeek</a>
+  </div>
+  <div class="user-profile">
+    <!-- 修改头像为实际图片 -->
+    <img src="https://hynzdc.oss-cn-beijing.aliyuncs.com/image/image-20250216143639313.png"
+         class="user-avatar"
+         alt="用户头像">
+    <button class="logout-button" onclick="document.getElementById('logoutForm').submit()">登出系统</button>
+    <span th:text="${username}" style="font-size:14px;color:#ffffff;"></span>
+    <form id="logoutForm" th:action="@{/view/logout}" method="get" style="display: none;">
+    </form>
+  </div>
+</nav>
+<div class="stars" id="stars"></div>
+<div class="container">
+  <h1>配置自动回复资源</h1>
+  <form th:action="@{/view/saveResource}" method="post">
+    <!-- 基础信息 -->
+    <input type="hidden" id="id" name="id" th:value="${resource?.id}">
+    <div class="form-group">
+      <label for="resourceName">资源名称</label>
+      <input type="text" id="resourceName" name="resourceName" required th:value="${resource?.resourceName} ?: ''">
+    </div>
+    <div class="form-group">
+      <label for="resourceUrl">资源内容</label>
+      <input type="text" id="resourceUrl" name="resourceUrl" th:value="${resource?.resourceUrl} ?: ''" required>
+    </div>
+    <div class="form-group">
+      <label for="exchangeCode">自动回复口令</label>
+      <input type="text" id="exchangeCode" name="exchangeCode" th:value="${resource?.exchangeCode} ?: ''" required>
+    </div>
+    <button type="submit">保存配置</button>
+  </form>
+</div>
+<script>
+  // 创建星空背景
+  function createStars() {
+    const starsContainer = document.getElementById('stars');
+    const starCount = 500;
+
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 3;
+
+      // 设置随机动画参数
+      star.style.animation =
+              `twinkle 1.5s infinite ease-in-out,
+                 drift ${30 + Math.random() * 30}s infinite linear`; // 随机持续时间
+      star.style.animationDelay = `-${Math.random() * 30}s`; // 随机起始点
+
+      // 其他原有样式
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 100}%`;
+
+      starsContainer.appendChild(star);
+    }
+  }
+
+  // 初始化星空
+  createStars();
+</script>
+</body>
+</html>

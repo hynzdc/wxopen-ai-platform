@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>开发者配置信息</title>
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">-->
+    <link href="https://cdn.bootcss.com/font-awesome/6.0.0/css/all.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-color: #c9d1d9;
+            --border-color: #30363d;
+            --primary-color: #238636;
+        }
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        /* 单个星星样式 */
+        .star {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation:
+                    twinkle 1.5s infinite ease-in-out,
+                    drift 30s infinite linear; /* 新增移动动画 */
+        }
+        /* 新增移动动画关键帧 */
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0);
+            }
+            50% {
+                transform: translate(50px, 25px); /* 移动幅度 */
+            }
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        /* 星星闪烁动画 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            width: 600px;
+        }
+        h1 {
+            font-size: 24px;
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+        /* Configuration list styles */
+        .config-list {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .config-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+        .config-item:last-child {
+            border-bottom: none;
+        }
+        .config-label {
+            width: 200px;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .config-value {
+            flex: 1;
+            color: #aabbd3;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            padding-right: 80px;
+        }
+        /* Edit button styles */
+        /* Bottom action bar */
+        .action-bar {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .main-edit-btn {
+            background-color: #0366d6;
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .main-edit-btn:hover {
+            background-color: #035fc7;
+        }
+        /* Navbar styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .nav-items {
+            display: flex;
+            gap: 32px;
+            flex-grow: 1;
+        }
+        .nav-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+            margin-left: 2%;
+        }
+        .nav-link:hover {
+            color: #58a6ff;
+            text-decoration: underline;
+        }
+        /* User profile styles */
+        .user-profile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            transition: transform 0.2s;
+        }
+
+        .logout-button {
+            position: absolute;
+            margin-top: 18%;
+            top: 100%; /* Position it below the avatar */
+            right: 0; /* Align it to the right of the avatar */
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: var(--text-color);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            white-space: nowrap;
+            transform: translateY(10px);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .user-profile:hover .logout-button {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0); /* Move it into view */
+        }
+
+        .logout-button:hover {
+            background: #f6f8fa;
+            color: #cb2431;
+        }
+        /* Copy icon styles */
+        .copy-container {
+            position: relative;
+            display: inline-block;
+        }
+        .copy-icon {
+            position: absolute;
+            right: -40px; /* Adjust position */
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #586069;
+            transition: color 0.2s;
+            width: 18px;
+            height: 18px;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .copy-icon:hover {
+            color: #58a6ff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        /* Tooltip styles */
+        .copy-tooltip {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 9999;
+            animation: fadeInOut 2s forwards;
+            display: none; /* Initially hidden */
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; bottom: 10px; }
+            20% { opacity: 1; bottom: 20px; }
+            80% { opacity: 1; bottom: 20px; }
+            100% { opacity: 0; bottom: 30px; }
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<!-- 新增导航栏 -->
+<nav class="navbar">
+    <div class="nav-items">
+        <a th:href="@{/}" class="nav-link">资源配置</a>
+        <a th:href="@{/view/toSettingReply}" class="nav-link">回复管理</a>
+        <a th:href="@{/view/showResourceList}" class="nav-link">资源管理</a>
+        <a th:href="@{/view/chatDeepSeek}" class="nav-link">满血DeepSeek</a>
+    </div>
+    <div class="user-profile">
+        <!-- 修改头像为实际图片 -->
+        <img src="https://hynzdc.oss-cn-beijing.aliyuncs.com/image/image-20250216143639313.png"
+             class="user-avatar"
+             alt="用户头像">
+        <button class="logout-button" onclick="document.getElementById('logoutForm').submit()">登出系统</button>
+        <span th:text="${user.username}" style="font-size:14px;color:#ffffff;"></span>
+        <form id="logoutForm" th:action="@{/view/logout}" method="get" style="display: none;">
+        </form>
+    </div>
+</nav>
+<div class="stars" id="stars"></div>
+<div class="container">
+    <h1>微信公众号开发配置</h1>
+    <div class="config-list">
+        <div class="config-item">
+            <div class="config-label">用户名</div>
+            <div class="config-value" th:text="${user.username}"></div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">邮箱</div>
+            <div class="config-value" th:text="${user.email}"></div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">公众号名称</div>
+            <div class="config-value" th:text="${config.wxOpenName}"></div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">开发者ID (AppID)</div>
+            <div class="config-value" th:text="${config.appId}"></div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">开发者密码 (AppSecret)</div>
+            <div class="config-value" th:text="${config.appSecret}"></div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">服务器地址(URL)</div>
+            <div class="config-value">
+                <div class="copy-container">
+                    <span th:text="${config.url}" id="urlText"></span>
+                    <svg class="copy-icon"
+                         onclick="handleCopyClick(event)"
+                         th:data-clipboard-text="${config.url}"
+                         xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">令牌 (Token)</div>
+            <div class="config-value" th:text="${config.token}"></div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">消息加解密密钥</div>
+            <div class="config-value" th:text="${config.encodingKey}"></div>
+        </div>
+    </div>
+    <div class="action-bar">
+        <a th:href="@{/view/modifyUserConfig}" class="main-edit-btn">编辑配置</a>
+    </div>
+</div>
+<div id="copyTooltip" class="copy-tooltip"></div>
+<script>
+    // Improved copy handling function
+    function handleCopyClick(event) {
+        event.stopPropagation();
+        const text = event.currentTarget.getAttribute('data-clipboard-text');
+        copyToClipboard(text).then(() => {
+            showTooltip('✓ 复制成功');
+        }).catch(err => {
+            showTooltip('❌ 复制失败');
+            console.error('复制失败:', err);
+        });
+    }
+    async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+    }
+    function showTooltip(message) {
+        const tooltip = document.getElementById('copyTooltip');
+        tooltip.textContent = message;
+        tooltip.style.display = 'block';
+        console.log(message)
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 2000);
+    }
+    // 创建星空背景
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const starCount = 500;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3;
+
+            // 设置随机动画参数
+            star.style.animation =
+                `twinkle 1.5s infinite ease-in-out,
+                 drift ${30 + Math.random() * 30}s infinite linear`; // 随机持续时间
+            star.style.animationDelay = `-${Math.random() * 30}s`; // 随机起始点
+
+            // 其他原有样式
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // 初始化星空
+    createStars();
+</script>
+</body>
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>DeepSeek问答</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .stars {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+    /* 单个星星样式 */
+    .star {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      animation:
+              twinkle 1.5s infinite ease-in-out,
+              drift 30s infinite linear; /* 新增移动动画 */
+    }
+    /* 新增移动动画关键帧 */
+    @keyframes drift {
+      0% {
+        transform: translate(0, 0);
+      }
+      50% {
+        transform: translate(50px, 25px); /* 移动幅度 */
+      }
+      100% {
+        transform: translate(0, 0);
+      }
+    }
+
+    /* 星星闪烁动画 */
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .chat-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      height: 70vh;
+      display: flex;
+      flex-direction: column;
+      margin-top: 100px;
+    }
+
+    .message-history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .message {
+      margin: 10px 0;
+      display: flex;
+      align-items: start;
+    }
+
+    .user-message {
+      justify-content: flex-end;
+    }
+
+    .bot-message {
+      justify-content: flex-start;
+    }
+
+    /* 保留换行符显示 */
+    .bubble {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message-bubble {
+      display: inline-block; /* 使气泡根据内容自动调整大小 */
+      padding: 12px 16px;
+      border-radius: 6px;
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap; /* 保留换行符 */
+      position: relative; /* 为光标定位做准备 */
+    }
+
+    .user-bubble {
+      background: #007bff;
+      color: white;
+    }
+
+    .bot-bubble {
+      background: #e9ecef;
+      color: #212529;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end; /* 保证按钮始终在底部 */
+      flex-shrink: 0; /* 防止压缩 */
+    }
+
+    #userInput {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 25px;
+      outline: none;
+    }
+
+    button {
+      padding: 12px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* 发送图标样式 */
+    .send-icon {
+      width: 24px;
+      height: 24px;
+      fill: #ffffff;
+      transition: opacity 0.2s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .typing-indicator {
+      display: none;
+      padding: 10px;
+      color: #666;
+      font-style: italic;
+    }
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    .blinking-cursor {
+      animation: blink 1s infinite;
+      margin-left: 2px;
+    }
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--card-bg);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      z-index: 1000;
+    }
+    .nav-items {
+      display: flex;
+      gap: 32px;
+      flex-grow: 1;
+    }
+    .nav-link {
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+      margin-left: 2%;
+    }
+    .nav-link:hover {
+      color: #58a6ff;
+      text-decoration: underline;
+    }
+    .user-profile {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      transition: transform 0.2s;
+    }
+    .logout-button {
+      position: absolute;
+      top: 100%;
+      margin-top: 18%;
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 16px;
+      color: var(--text-color);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+      white-space: nowrap;
+      transform: translateY(10px);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .user-profile:hover .logout-button {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .logout-button:hover {
+      background: #f6f8fa;
+      color: #cb2431;
+    }
+
+    :root {
+      --bg-color: #0d1117;
+      --card-bg: #161b22;
+      --text-color: #c9d1d9;
+      --border-color: #30363d;
+      --primary-color: #238636;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .chat-container {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      height: 70vh;
+      margin-top: 100px;
+    }
+
+    .message-history {
+      background-color: var(--bg-color);
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 6px;
+      line-height: 1.5;
+    }
+
+    .user-bubble {
+      background: #1f6feb;
+      color: white;
+    }
+
+    .bot-bubble {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+    }
+
+    #userInput {
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 12px 20px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      resize: none;
+      overflow-y: auto; /* 改为auto以便在需要时显示滚动条 */
+      line-height: 1.5;
+      min-height: 48px; /* 初始高度 */
+      max-height: 200px;
+      box-sizing: border-box; /* 重要：确保高度计算包含padding */
+      flex-shrink: 0; /* 防止压缩 */
+    }
+
+    #userInput:focus {
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 3px rgba(17, 88, 199, 0.3);
+    }
+
+    button {
+      padding: 12px;
+      width: 40px;
+      height: 40px;
+      background: #1f6feb;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button:hover {
+      background: #1756b3;
+    }
+
+    .typing-indicator {
+      color: #8b949e;
+      font-style: normal;
+    }
+    /* 新增加载动画样式 */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading {
+      position: relative;
+      pointer-events: none;
+      background: #0056b3 !important;
+    }
+
+    .loading::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    /* 加载时隐藏图标 */
+    .loading .send-icon {
+      opacity: 0;
+    }
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .octicon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+
+    .deepseek-title {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0;
+      color: var(--text-color);
+      letter-spacing: -0.5px;
+    }
+
+    .ai-text {
+      color: #58a6ff;
+      font-weight: 400;
+      margin-left: 8px;
+      position: relative;
+      top: 1px;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-items">
+    <a th:href="@{/}" class="nav-link">资源配置</a>
+    <a th:href="@{/view/toSettingReply}" class="nav-link">回复管理</a>
+    <a th:href="@{/view/showResourceList}" class="nav-link">资源管理</a>
+    <a th:href="@{/view/chatDeepSeek}" class="nav-link">满血DeepSeek</a>
+  </div>
+  <div class="user-profile">
+    <img src="https://hynzdc.oss-cn-beijing.aliyuncs.com/image/image-20250216143639313.png"
+         class="user-avatar"
+         alt="用户头像">
+    <button class="logout-button" onclick="document.getElementById('logoutForm').submit()">登出系统</button>
+    <span th:text="${username}" style="font-size:14px;color:#ffffff;"></span>
+    <form id="logoutForm" th:action="@{/view/logout}" method="get" style="display: none;">
+    </form>
+  </div>
+</nav>
+<div class="stars" id="stars"></div>
+<div class="chat-container">
+  <div class="chat-header">
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="octicon">
+      <path fill="#58a6ff" d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.113.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"></path>
+    </svg>
+    <h1 class="deepseek-title">DeepSeek<span class="ai-text">AI</span></h1>
+  </div>
+  <div class="message-history" id="messageHistory"></div>
+  <div class="typing-indicator" id="typingIndicator">DeepSeek正在输入...</div>
+  <div class="input-area">
+    <textarea id="userInput" placeholder="输入您的问题..." rows="1"></textarea>
+<!--    <button id="sendButton" onclick="sendMessage()">发送</button>-->
+    <button id="sendButton" onclick="sendMessage()">
+      <svg class="send-icon" viewBox="0 0 24 24">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  // 获取按钮元素
+  const sendButton = document.getElementById('sendButton');
+  let messageHistory = [];
+
+  function setLoadingState(isLoading) {
+    const btn = document.getElementById('sendButton');
+    btn.disabled = isLoading;
+    btn.classList.toggle('loading', isLoading);
+  }
+
+  function appendMessage(role, content) {
+    const historyDiv = document.getElementById('messageHistory');
+    const isUser = role === 'user';
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = `message-bubble ${isUser ? 'user-bubble' : 'bot-bubble'}`;
+    bubble.innerHTML = content.replace(/\n/g, '<br>');
+
+    messageDiv.appendChild(bubble);
+    historyDiv.appendChild(messageDiv);
+
+    // 自动滚动到底部
+    historyDiv.scrollTop = historyDiv.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const userInput = document.getElementById('userInput');
+    const question = userInput.value.trim();
+    if (!question || sendButton.classList.contains('loading')) return;
+    // 禁用按钮并添加加载状态
+    // sendButton.disabled = true;
+    // sendButton.classList.add('loading');
+    setLoadingState(true); // 替换原来的按钮状态修改
+    // 添加用户消息
+    messageHistory.push({ role: 'user', content: question });
+    appendMessage('user', question);
+    userInput.value = '';
+
+    // 创建AI消息容器
+    const historyDiv = document.getElementById('messageHistory');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message bot-message';
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble bot-bubble';
+    messageDiv.appendChild(bubble);
+    historyDiv.appendChild(messageDiv);  // 关键修改：提前添加到DOM
+
+    // 显示正在输入提示
+    const typingIndicator = document.getElementById('typingIndicator');
+    typingIndicator.style.display = 'block';
+
+    try {
+      const response = await fetch('/stream/sse', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache', // 新增
+          'Connection': 'keep-alive' // 新增
+        },
+        body: JSON.stringify(messageHistory)
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullResponse = ''; // 新增完整响应变量
+
+      // 创建光标元素
+      const cursor = document.createElement('span');
+      cursor.className = 'blinking-cursor';
+      cursor.textContent = '▌';
+      bubble.appendChild(cursor);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        let lineEnd;
+        while ((lineEnd = buffer.indexOf('\n')) !== -1) {
+          const line = buffer.substring(0, lineEnd).trim();
+          buffer = buffer.substring(lineEnd + 1);
+
+          if (line) {
+            // 移除 data: 前缀并处理内容
+            const processedLine = line.replace(/^data:\s*/g, '');
+
+            // (新增) 在关键词前强制添加换行符
+            const formattedLine = processedLine
+                    .replace(/<\/think>/g, '\n</think>\n\n')
+                    .replace(/<think>/g, '<think>\n')
+                    .replace(/<\/reply>/g, '\n</reply>\n')
+                    .replace(/<reply>/g, '<reply>\n')
+            // 更新累积的完整响应
+            fullResponse += formattedLine;
+
+            // 更新界面显示
+            cursor.remove();
+            bubble.textContent = fullResponse;
+            bubble.appendChild(cursor);
+
+            // 强制布局更新保证滚动正确
+            void bubble.offsetHeight;
+
+            requestAnimationFrame(() => {
+              historyDiv.scrollTo({
+                top: historyDiv.scrollHeight,
+                behavior: 'smooth'
+              });
+            });
+          }
+        }
+      }
+
+      // 最终处理
+      cursor.remove();
+      bubble.textContent = fullResponse + buffer.trim();
+      messageHistory.push({ role: 'assistant', content: bubble.textContent });
+
+    } catch (error) {
+      console.error('Error:', error);
+      bubble.innerHTML = '请求失败，请重试';
+    } finally {
+      // 恢复按钮状态
+      setLoadingState(false); // 替换原来的按钮状态恢复
+      typingIndicator.style.display = 'none';
+      historyDiv.scrollTop = historyDiv.scrollHeight;
+    }
+  }
+  // 添加自动调整高度函数
+  function autoResize(textarea) {
+    // 先重置高度再计算（解决缩小问题）
+    textarea.style.height = 'auto';
+    const computed = window.getComputedStyle(textarea);
+    const height = textarea.scrollHeight +
+            parseInt(computed.borderTopWidth) +
+            parseInt(computed.borderBottomWidth);
+
+    // 应用限制
+    const maxHeight = parseInt(computed.maxHeight) || 200;
+    textarea.style.height = Math.min(height, maxHeight) + 'px';
+
+    // 滚动条处理（仅在超过最大高度时显示）
+    textarea.style.overflowY = height > maxHeight ? 'auto' : 'hidden';
+  }
+  // 在DOM加载后添加事件监听
+  document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('userInput');
+
+    // 初始化设置
+    autoResize(textarea);
+
+    // 输入事件监听
+    textarea.addEventListener('input', function() {
+      autoResize(this);
+
+      // 强制容器重排（解决向上扩展问题）
+      document.querySelector('.chat-container').style.display = 'flex';
+    });
+
+    // 修复删除时的问题
+    textarea.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        setTimeout(() => autoResize(this), 0);
+      }
+    });
+  });
+
+  // 修改回车处理（保持原有发送逻辑）
+  document.getElementById('userInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !sendButton.classList.contains('loading')) {
+      e.preventDefault();
+      sendMessage();
+
+      // 发送后重置高度
+      setTimeout(() => {
+        const textarea = document.getElementById('userInput');
+        textarea.style.height = '48px';
+        textarea.style.overflowY = 'hidden';
+      }, 10);
+    }
+  });
+  // 创建星空背景
+  function createStars() {
+    const starsContainer = document.getElementById('stars');
+    const starCount = 500;
+
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 3;
+
+      // 设置随机动画参数
+      star.style.animation =
+              `twinkle 1.5s infinite ease-in-out,
+                 drift ${30 + Math.random() * 30}s infinite linear`; // 随机持续时间
+      star.style.animationDelay = `-${Math.random() * 30}s`; // 随机起始点
+
+      // 其他原有样式
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 100}%`;
+
+      starsContainer.appendChild(star);
+    }
+  }
+
+  // 初始化星空
+  createStars();
+</script>
+</body>
+</html>

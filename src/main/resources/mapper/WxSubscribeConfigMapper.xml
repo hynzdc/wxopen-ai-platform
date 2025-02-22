@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hyn.demos.mapper.WxSubscribeConfigMapper">
+  <resultMap id="BaseResultMap" type="com.hyn.demos.entity.WxSubscribeConfig">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="reply_text" jdbcType="VARCHAR" property="replyText" />
+    <result column="wx_user_name" jdbcType="VARCHAR" property="wxUserName" />
+    <result column="user_id" jdbcType="BIGINT" property="userId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    id, reply_text, wx_user_name,user_id
+  </sql>
+</mapper>

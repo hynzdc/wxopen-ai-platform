@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册成功 - 欢迎加入</title>
+    <style>
+        /* 基础样式 */
+        body {
+            margin: 0;
+            padding: 2rem;
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-icon::after {
+            content: "✓";
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin: 0 0 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .username {
+            color: #4CAF50;
+            font-weight: 600;
+            background: #f0f9eb;
+            padding: 0.3rem 0.8rem;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 0.3rem 0;
+        }
+
+        .manual-link {
+            margin: 2rem 0;
+            padding: 1.2rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .manual-link a {
+            color: #2c3e50;
+            text-decoration: none;
+            border-bottom: 2px solid #4CAF50;
+            transition: all 0.2s ease;
+        }
+
+        .manual-link a:hover {
+            color: #45a049;
+            border-bottom-color: transparent;
+        }
+
+        .email-notice {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 成功图标 -->
+    <div class="success-icon"></div>
+
+    <!-- 主标题 -->
+    <h1>🎉 欢迎加入！🎉 </h1>
+
+    <!-- 用户名显示 -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <p>您的账号 <span class="username" th:text="${username}">[用户名]</span> 已成功注册</p>
+    </div>
+
+    <!-- 使用手册链接 -->
+    <div class="manual-link">
+        📘 使用教程：
+        <a href="https://www.wxopen-ai.cn/view/target/readme"
+           target="_blank">
+            公众号接入AI大模型使用手册
+        </a>
+    </div>
+
+    <!-- 邮件通知 -->
+    <div class="email-notice">
+        📌 关注公众号 <strong th:text="${wxOpenName}"></strong> 获取更多的AI资源！✨
+    </div>
+</div>
+</body>
+</html>

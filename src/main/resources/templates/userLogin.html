@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公众号AI助手</title>
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">-->
+    <link href="https://cdn.bootcss.com/font-awesome/6.0.0/css/all.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
+    <style>
+        /* Dark theme with dynamic starry background */
+        body {
+            background-color: #0d1117;
+            background-size: cover;
+            background-attachment: fixed;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            color: #c9d1d9;
+            overflow: hidden;
+        }
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        /* 单个星星样式 */
+        .star {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation:
+                    twinkle 1.5s infinite ease-in-out,
+                    drift 30s infinite linear; /* 新增移动动画 */
+        }
+        /* 新增移动动画关键帧 */
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0);
+            }
+            50% {
+                transform: translate(50px, 25px); /* 移动幅度 */
+            }
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        /* 星星闪烁动画 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        .container {
+            background-color: rgba(22, 27, 34, 0.95);
+            padding: 30px;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+            width: 340px;
+            backdrop-filter: blur(5px);
+        }
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+        }
+        .tab {
+            font-size: 16px;
+            color: #c9d1d9;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            border-bottom: 2px solid transparent;
+            flex: 1;
+            text-align: center;
+        }
+        .tab.active {
+            color: #58a6ff;
+            border-color: #58a6ff;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #c9d1d9;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            height: 34px;
+            padding: 5px 12px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #161b22;
+            color: #c9d1d9;
+            padding-left: 38px !important;
+            padding-right: 38px !important;
+        }
+        input:focus {
+            border-color: #58a6ff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.3);
+        }
+        .register-btn {
+            width: 100%;
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        .register-btn:hover {
+            background-color: #2ea043;
+        }
+        .login-link {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 14px;
+            gap: 8px;
+            color: #8b949e;
+        }
+        .login-link a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        .separator {
+            color: #6a737d;
+            margin: 0 2px;
+        }
+        .link-item {
+            display: flex;
+            align-items: center;
+        }
+        .input-icon {
+            position: relative;
+        }
+        .icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8b949e;
+            z-index: 2;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #8b949e;
+        }
+        /* GitHub style title */
+        .github-container {
+            background-color: #161b22;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            border: 1px solid #30363d;
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .github-title {
+            font-size: 26px;
+            color: #c9d1d9;
+            margin: 0;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+        }
+        .github-title::before {
+            content: "\f135"; /* Font Awesome Robot icon */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            color: #58a6ff;
+            font-size: 28px;
+            transition: color 0.3s ease;
+        }
+        .github-container:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        .github-container:hover .github-title::before {
+            color: #2ea043;
+        }
+        .verify-btn {
+            background-color: #58a6ff;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+        .verify-btn:hover {
+            background-color: #035fc7;
+            text-decoration: none;
+        }
+        .verify-btn:disabled {
+            background-color: #30363d;
+            cursor: not-allowed;
+        }
+        .email-verify-container {
+            display: flex;
+            gap: 10px;
+        }
+        .email-verify-container input {
+            flex: 1;
+            min-width: 0;
+        }
+        @media (max-width: 480px) {
+            .container {
+                width: 90%;
+                padding: 20px;
+            }
+            .tabs {
+                justify-content: space-between;
+            }
+            .tab {
+                font-size: 14px;
+                padding: 8px 10px;
+            }
+            .github-title {
+                font-size: 22px;
+            }
+            .register-btn, .verify-btn {
+                font-size: 12px;
+                padding: 10px;
+            }
+            .login-link {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="container">
+    <div class="github-container">
+        <h2 class="github-title">公众号AI助手平台</h2>
+    </div>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('password')">密码登录</div>
+        <div class="tab" onclick="switchTab('code')">验证码登录</div>
+    </div>
+    <form id="password-login" th:action="@{/view/userLogin}" method="post">
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-envelope icon"></i>
+                <input placeholder="请输入用户名/邮箱地址" type="text" id="username" name="username" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-lock icon"></i>
+                <input placeholder="请输入密码" type="password" id="password" name="password" required>
+                <i class="fas fa-eye-slash toggle-password" onclick="togglePasswordVisibility()"></i>
+            </div>
+        </div>
+        <button type="submit" class="register-btn">登录</button>
+    </form>
+    <form id="code-login" th:action="@{/view/userLoginWithCode}" method="post" style="display: none;">
+        <div class="form-group">
+            <div class="input-icon">
+                <i class="fas fa-envelope icon"></i>
+                <input placeholder="邮箱地址" type="text" id="email" name="email" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="email-verify-container">
+                <div class="input-icon" style="flex: 1;">
+                    <i class="fas fa-shield-alt icon"></i>
+                    <input type="text"
+                           placeholder="请输入验证码"
+                           id="verify-code"
+                           name="verifyCode"
+                           required
+                           maxlength="6"
+                           pattern="\d{6}"
+                           title="请输入6位数字验证码">
+                </div>
+                <a
+                        class="verify-btn"
+                        id="get-verify-code"
+                        href="javascript:void(0)"
+                        onclick="sendCode()"> <!-- 触发 JavaScript 函数 -->
+                    获取验证码
+                </a>
+            </div>
+        </div>
+        <button type="submit" class="register-btn">登录</button>
+    </form>
+    <div class="login-link">
+        <a th:href="@{/view/target/forgotPassword}" class="link-item">忘记密码？</a>
+        <span class="separator">|</span>
+        <span class="link-item"> <a th:href="@{/view/target/userRegister}">立即注册</a></span>
+    </div>
+</div>
+<script>
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.querySelector('.toggle-password');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
+        }
+    }
+    function switchTab(tab) {
+        const passwordLoginForm = document.getElementById('password-login');
+        const codeLoginForm = document.getElementById('code-login');
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(t => t.classList.remove('active'));
+        if (tab === 'password') {
+            passwordLoginForm.style.display = 'block';
+            codeLoginForm.style.display = 'none';
+            tabs[0].classList.add('active');
+        } else {
+            passwordLoginForm.style.display = 'none';
+            codeLoginForm.style.display = 'block';
+            tabs[1].classList.add('active');
+        }
+    }
+    document.getElementById('get-verify-code').addEventListener('click', function(e) {
+        e.preventDefault();
+        const btn = this;
+        const emailInput = document.getElementById('email');
+        // 邮箱验证逻辑
+        if (!emailInput.value.trim()) {
+            alert('请先填写邮箱地址');
+            return;
+        }
+        // 防止重复点击
+        if (btn.disabled) return;
+        // 清除现有定时器
+        if (btn.timerId) clearInterval(btn.timerId);
+        // 初始化倒计时参数
+        const duration = 60;
+        const startTime = Date.now();
+        // 立即更新按钮状态
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+        btn.textContent = `${duration}秒后重试`;
+        // 使用按钮对象存储timerId避免全局变量
+        btn.timerId = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const remaining = duration - elapsed;
+            if (remaining > 0) {
+                btn.textContent = `${remaining}秒后重试`;
+            } else {
+                clearInterval(btn.timerId);
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+                btn.textContent = '获取验证码';
+                delete btn.timerId; // 清理存储的timerId
+            }
+        }, 1000);
+    });
+    // 获取验证码逻辑
+    const btn = document.getElementById('get-verify-code');
+    function sendCode() {
+        if (btn.disabled) return;
+        const email = document.getElementById('email').value; // 获取输入框的实时值
+        const url = `/view/sendVerifyCodeToEmail/${encodeURIComponent(email)}`;
+        // 发送 AJAX 请求（示例使用 fetch）
+        fetch(url)
+            .then(response => response.json())
+            // .then(data => alert('验证码已发送'))
+            .catch(error => console.error('Error:', error));
+    }
+    // 创建星空背景
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const starCount = 500;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3;
+
+            // 设置随机动画参数
+            star.style.animation =
+                `twinkle 1.5s infinite ease-in-out,
+                 drift ${30 + Math.random() * 30}s infinite linear`; // 随机持续时间
+            star.style.animationDelay = `-${Math.random() * 30}s`; // 随机起始点
+
+            // 其他原有样式
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // 初始化星空
+    createStars();
+</script>
+</body>
+</html>
