@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>DeepSeek问答</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -10,6 +14,80 @@
       margin: 0 auto;
       padding: 20px;
       background-color: #f5f5f5;
+    }
+    /* 添加 Markdown 专用样式 */
+    .bot-bubble code {
+      background-color: rgba(110,118,129,0.4);
+      padding: 0.2em 0.4em;
+      border-radius: 6px;
+      font-family: monospace;
+    }
+    .copy-btn {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      padding: 4px 8px;
+      background: #1f6feb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      opacity: 0.6 !important; /* 始终显示半透明按钮 */
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    .copy-btn:hover {
+      opacity: 1 !important;
+      background: #58a6ff;
+    }
+
+    pre:hover .copy-btn {
+      opacity: 1;
+    }
+
+    pre {
+      position: relative; /* 为绝对定位按钮提供定位上下文 */
+    }
+
+
+    .bot-bubble pre {
+      background-color: rgba(110,118,129,0.1);
+      padding: 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+
+    .bot-bubble pre code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .bot-bubble blockquote {
+      border-left: 4px solid #30363d;
+      margin: 8px 0;
+      padding-left: 12px;
+      color: #8b949e;
+    }
+
+    .bot-bubble table {
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+
+    .bot-bubble th, .bot-bubble td {
+      padding: 6px 12px;
+      border: 1px solid #30363d;
+    }
+
+    .bot-bubble ul, .bot-bubble ol {
+      padding-left: 28px;
+      margin: 8px 0;
+    }
+
+    .bot-bubble li {
+      margin: 4px 0;
     }
     .stars {
       position: fixed;
@@ -212,19 +290,20 @@
       position: absolute;
       top: 100%;
       margin-top: 18%;
-      right: 0;
+      margin-right: 10%;
+      right: 10%;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 8px 16px;
+      padding: 8px 40px;
       color: var(--text-color);
       opacity: 0;
       visibility: hidden;
       transition: all 0.2s;
-      white-space: nowrap;
       transform: translateY(10px);
       cursor: pointer;
       font-size: 14px;
+      white-space: nowrap;
     }
     .user-profile:hover .logout-button {
       opacity: 1;
@@ -415,7 +494,7 @@
   <div class="typing-indicator" id="typingIndicator">DeepSeek正在输入...</div>
   <div class="input-area">
     <textarea id="userInput" placeholder="输入您的问题..." rows="1"></textarea>
-<!--    <button id="sendButton" onclick="sendMessage()">发送</button>-->
+    <!--    <button id="sendButton" onclick="sendMessage()">发送</button>-->
     <button id="sendButton" onclick="sendMessage()">
       <svg class="send-icon" viewBox="0 0 24 24">
         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -425,6 +504,17 @@
 </div>
 
 <script>
+  // 在 script 标签内添加 marked 配置
+  marked.setOptions({
+    breaks: true,
+    highlight: function(code) {
+      return hljs.highlightAuto(code).value;
+    },
+    sanitize: true, // 开启安全过滤
+    sanitizer: function(html) {
+      return DOMPurify.sanitize(html); // 使用 DOMPurify 进行二次过滤
+    }
+  });
   // 获取按钮元素
   const sendButton = document.getElementById('sendButton');
   let messageHistory = [];
@@ -444,7 +534,7 @@
 
     const bubble = document.createElement('div');
     bubble.className = `message-bubble ${isUser ? 'user-bubble' : 'bot-bubble'}`;
-    bubble.innerHTML = content.replace(/\n/g, '<br>');
+    bubble.innerHTML = content;
 
     messageDiv.appendChild(bubble);
     historyDiv.appendChild(messageDiv);
@@ -465,7 +555,12 @@
     messageHistory.push({ role: 'user', content: question });
     appendMessage('user', question);
     userInput.value = '';
-
+    // 立即重置高度（新增这部分）
+    requestAnimationFrame(() => {
+      userInput.style.height = '48px';
+      userInput.style.overflowY = 'hidden';
+      autoResize(userInput);
+    });
     // 创建AI消息容器
     const historyDiv = document.getElementById('messageHistory');
     const messageDiv = document.createElement('div');
@@ -514,19 +609,15 @@
           if (line) {
             // 移除 data: 前缀并处理内容
             const processedLine = line.replace(/^data:\s*/g, '');
-
-            // (新增) 在关键词前强制添加换行符
             const formattedLine = processedLine
-                    .replace(/<\/think>/g, '\n</think>\n\n')
-                    .replace(/<think>/g, '<think>\n')
-                    .replace(/<\/reply>/g, '\n</reply>\n')
-                    .replace(/<reply>/g, '<reply>\n')
+                    .replace(/<br>/g,'\n')
+                    .replace(/<kong>/g,' ')
             // 更新累积的完整响应
             fullResponse += formattedLine;
-
+            const parsedMarkdown = marked.parse(fullResponse);
             // 更新界面显示
             cursor.remove();
-            bubble.textContent = fullResponse;
+            bubble.innerHTML = parsedMarkdown;
             bubble.appendChild(cursor);
 
             // 强制布局更新保证滚动正确
@@ -544,7 +635,8 @@
 
       // 最终处理
       cursor.remove();
-      bubble.textContent = fullResponse + buffer.trim();
+      bubble.innerHTML = marked.parse(fullResponse);
+      addCopyButtons()
       messageHistory.push({ role: 'assistant', content: bubble.textContent });
 
     } catch (error) {
@@ -559,6 +651,8 @@
   }
   // 添加自动调整高度函数
   function autoResize(textarea) {
+    // 增加最小高度设置
+    textarea.style.minHeight = '48px'; // 新增
     // 先重置高度再计算（解决缩小问题）
     textarea.style.height = 'auto';
     const computed = window.getComputedStyle(textarea);
@@ -568,7 +662,7 @@
 
     // 应用限制
     const maxHeight = parseInt(computed.maxHeight) || 200;
-    textarea.style.height = Math.min(height, maxHeight) + 'px';
+    textarea.style.height = Math.min(Math.max(height, 48), maxHeight) + 'px'; // 修改
 
     // 滚动条处理（仅在超过最大高度时显示）
     textarea.style.overflowY = height > maxHeight ? 'auto' : 'hidden';
@@ -603,10 +697,13 @@
       sendMessage();
 
       // 发送后重置高度
+      // 立即重置高度（修改这里）
+      const textarea = document.getElementById('userInput');
       setTimeout(() => {
-        const textarea = document.getElementById('userInput');
-        textarea.style.height = '48px';
+        textarea.style.height = '48px'; // 初始高度
         textarea.style.overflowY = 'hidden';
+        // 强制触发一次resize确保生效
+        autoResize(textarea);
       }, 10);
     }
   });
@@ -638,6 +735,30 @@
 
   // 初始化星空
   createStars();
+  // 添加代码复制功能
+  document.addEventListener('click', (e) => {
+    const copyBtn = e.target.closest('.copy-btn');
+    if (copyBtn) {
+      const code = copyBtn.parentNode.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        copyBtn.textContent = 'Copied';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  });
+  // 在marked渲染后添加复制按钮（修改sendMessage函数中的bubble.innerHTML处理部分）
+  function addCopyButtons() {
+    document.querySelectorAll('pre').forEach(pre => {
+      if (!pre.querySelector('.copy-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.textContent = 'Copy';
+        pre.appendChild(btn);
+      }
+    });
+  }
 </script>
 </body>
 </html>
